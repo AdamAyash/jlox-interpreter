@@ -101,7 +101,14 @@ public class Scanner {
                     // A comment goes until the end of the line.
                     while (peek() != '\n' && !isAtEnd())
                         advance();
-                } else {
+                }
+                else if(match('*')){
+                    if(!blockComment()){
+                        Lox.error(line, "Unterminated block comment.");
+                        return;
+                    }
+                }
+                else {
                     addToken(SLASH);
                 }
                 break;
@@ -129,6 +136,35 @@ public class Scanner {
                 break;
         }
     }
+
+    private boolean blockComment() {
+        while(!(peek() == '*' && peekNext() == '/'))
+        {
+            if(peek() == '\n')
+                line++;
+
+            if(peek() == '/' && peekNext() == '*') {
+                advance();
+                if (!blockComment())
+                    return false;
+            }
+
+            if(isAtEnd())
+                return  false;
+
+            advance();
+
+        }
+
+        if(peek() != '*' && peekNext() != '/')
+            return false;
+
+        advance();
+        advance();
+
+        return  true;
+    }
+
     private boolean isDigit(char c) {
         return c >= '0' && c <= '9';
     }
@@ -155,8 +191,20 @@ public class Scanner {
         return source.charAt(current);
     }
 
+    private char peek(int offset) {
+
+        int index = current + offset;
+        if (isAtEnd(index)) return '\0';
+
+        return source.charAt(index);
+    }
+
     private boolean isAtEnd() {
         return current >= source.length();
+    }
+
+    private boolean isAtEnd(int index) {
+        return index >= source.length();
     }
 
     private char advance() {
